@@ -20,6 +20,8 @@ var express = require('express');
 var exphbs  = require('express-handlebars');
  
 var app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
@@ -34,15 +36,18 @@ app.get('/', function (req, res) {
 });
 
 // post to post a note
-app.post('/info/:id',(req,res)=>{
-  ScrapeData.notes.create(req.body)
-  .then(function(response){
-   return ScrapeData.cruises.findOneAndUpdate({_id:req.params.id},{note:response._id})
-  }).then(function(jsonRes){
-    res.json(jsonRes)
-  }).catch(function(err){
-    if(err) throw err
-  })
+app.post('/info/:id',function(req,res){
+  console.log(req.body)
+  console.log(req.params.id)
+  // ScrapeData.notes.create(req.body)
+  // .then(function(response){
+  //   console.log(response)
+  // //  return ScrapeData.cruises.findOneAndUpdate({_id:req.params.id},{note:response._id})
+  // }).then(function(jsonRes){
+  //   res.json(jsonRes)
+  // }).catch(function(err){
+  //   if(err) throw err
+  // })
 })
 
 

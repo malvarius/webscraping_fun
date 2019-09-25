@@ -5,12 +5,18 @@ $('.reload').on('click',()=>{
 })
 
 $(document).on('click','.getId',function(){
-    const dataID = $(this).attr('data-id');
-    const noteVal = $(`#textArea-${dataID}`).val();
+    let dataID = $(this).attr('data-id');
+    let noteVal = $(`#textArea-${dataID}`).val();
     console.log(dataID);
     console.log(noteVal)
-    $.post('/info/'+dataID,{note:noteVal})
-    .then((data)=>{
+    $.ajax({
+        method: "POST",
+        url: "/info/" + dataID,
+        data: {
+          body: noteVal
+        }
+      })
+    .then(function(data){
         console.log('Posted');
     })
 })
