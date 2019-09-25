@@ -1,1 +1,23 @@
-<h1>Yo</h1>
+<a href="/scraping" type="GET" class="btn btn-warning reload">Find New Cruises!</a>
+
+
+{{#each info}}
+<div class="row d-flex justify-content-center">
+    <div class="col-4 offset-1 mt-1">
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">{{this.title}}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{this.summary}}</h6>
+                <a href="#" class="card-link">{{this.link}}</a>
+                <div class="form" type="POST">
+                    <div class="form-group">
+                        <label for="exampleFormControlTextarea1">Example textarea</label>
+                        <textarea class="form-control" id='textArea-{{this._id}}' rows="3">{{this.note}}</textarea>
+                    </div>
+                    <button data-id="{{this._id}}" class="btn getId btn-primary mb-2">Update Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/each}}

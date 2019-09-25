@@ -6,7 +6,7 @@ var cheerio = require("cheerio");
 var axios = require("axios");
 var logger = require("morgan");
 var mongoose = require('mongoose');
-var ScrapeData = require('./connection.js')
+var ScrapeData = require('./models')
 var express = require('express');
 var PORT = 3000;
 var app = express();
@@ -20,27 +20,36 @@ var express = require('express');
 var exphbs  = require('express-handlebars');
  
 var app = express();
- 
+app.use(express.static("public"));
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
- 
-app.get('/', function (req, res) {
-    res.render('index');
-});
-
 // Connect to the Mongo DB
 mongoose.connect("mongodb://localhost/cruises", { useNewUrlParser: true });
+//  get to query the DB for cruise info
+app.get('/', function (req, res) {
+  ScrapeData.cruises.find({})
+  .then((data)=>{
+    res.render('index',{info:data});
+  });
+});
 
-// Make a request via axios to grab the HTML body from the site of your choice
-axios.get("https://www.princess.com/find/searchResults.do?trade=S").then(function(response) {
+// post to post a note
+app.post('/info/:id',(req,res)=>{
+  ScrapeData.notes.create(req.body)
+  .then(function(response){
+   return ScrapeData.cruises.findOneAndUpdate({_id:req.params.id},{note:response._id})
+  }).then(function(jsonRes){
+    res.json(jsonRes)
+  }).catch(function(err){
+    if(err) throw err
+  })
+})
 
-  // Load the HTML into cheerio and save it to a variable
-  // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
+
+// basic get to scrape website for cruise data
+app.get('/scraping',(req,res)=>{
+  axios.get("https://www.princess.com/find/searchResults.do?trade=S").then(function(response) {
   var $ = cheerio.load(response.data);
-
-  // Select each element in the HTML body from which you want information.
-  // NOTE: Cheerio selectors function similarly to jQuery's selectors,
-  // but be sure to visit the package's npm page to see how it works
   $(".result").each(function(i, element) {
     var info = {
     title : $(element).find(".cruise-name").text(),
@@ -48,13 +57,22 @@ axios.get("https://www.princess.com/find/searchResults.do?trade=S").then(functio
     link : $(element).find(".price-amount").text()
     }
 
-    ScrapeData.create(info)
+    ScrapeData.cruises.create(info)
+    .then((data)=>{
+      res.json('You put the data in the thing')
+    }).catch((err)=>{
+      if (err) {
+        console.log('there was an error here')
+      }
+    })
 
   });
-
-
   // Log the results once you've looped through each of the elements found with cheerio
-});
+})
+
+
+})
+
 app.listen(PORT, function() {
   console.log("App running on port " + PORT + "!");
 });

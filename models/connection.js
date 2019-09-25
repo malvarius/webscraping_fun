@@ -8,18 +8,18 @@ var scrapeSchema = new Schema({
  
   
    title: {
-    type: String,
-    required: true,
-    trim:true
+    type: String
   },
   summary:{
     type: String,
-    required: true,
+    unique: true
   },
   link:{
-    type: String,
-    required: true,
-    trim:true
+    type: String
+  },
+  note: {
+    type: Schema.Types.ObjectId,
+    ref: "notes"
   }
   });
 
