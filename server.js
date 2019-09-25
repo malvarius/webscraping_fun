@@ -1,122 +1,60 @@
-var express = require("express");
-var logger = require("morgan");
-var mongoose = require("mongoose");
-var app = express();
-var exphbs = require('express-handlebars');
+// Using this template, the cheerio documentation,
+// and what you've learned in class so far, scrape a website
+// of your choice, save information from the page in a result array, and log it to the console.
 
-app.engine("handlebars", exphbs({defaultLayout: "main"}));
-app.set('view engine', "handlebars");
-
-// Our scraping tools
-// Axios is a promised-based http library, similar to jQuery's Ajax method
-// It works on the client and on the server
-var axios = require("axios");
 var cheerio = require("cheerio");
-
-// Require all models
-var db = require("./models");
-
+var axios = require("axios");
+var logger = require("morgan");
+var mongoose = require('mongoose');
+var ScrapeData = require('./connection.js')
+var express = require('express');
 var PORT = 3000;
-
-// Initialize Express
-
-
-// Configure middleware
-
-// Use morgan logger for logging requests
+var app = express();
 app.use(logger("dev"));
 // Parse request body as JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // Make public a static folder
 app.use(express.static("public"));
+var express = require('express');
+var exphbs  = require('express-handlebars');
+ 
+var app = express();
+ 
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
+ 
+app.get('/', function (req, res) {
+    res.render('index');
+});
 
 // Connect to the Mongo DB
-mongoose.connect("mongodb://localhost/webscraperHW", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost/cruises", { useNewUrlParser: true });
 
-// Routes
-app.get("/", function(req,res){
+// Make a request via axios to grab the HTML body from the site of your choice
+axios.get("https://www.princess.com/find/searchResults.do?trade=S").then(function(response) {
 
-})
+  // Load the HTML into cheerio and save it to a variable
+  // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
+  var $ = cheerio.load(response.data);
 
-// A GET route for scraping the echoJS website
-app.get("/scrape", function(req, res) {
-  // First, we grab the body of the html with axios
-  axios.get("http://www.echojs.com/").then(function(response) {
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(response.data);
+  // Select each element in the HTML body from which you want information.
+  // NOTE: Cheerio selectors function similarly to jQuery's selectors,
+  // but be sure to visit the package's npm page to see how it works
+  $(".result").each(function(i, element) {
+    var info = {
+    title : $(element).find(".cruise-name").text(),
+    summary : $(element).find(".depart-date").text(),
+    link : $(element).find(".price-amount").text()
+    }
 
-    // Now, we grab every h2 within an article tag, and do the following:
-    $("article h2").each(function(i, element) {
-      // Save an empty result object
-      var result = {};
+    ScrapeData.create(info)
 
-      // Add the text and href of every link, and save them as properties of the result object
-      result.title = $(this)
-        .children("a")
-        .text();
-      result.link = $(this)
-        .children("a")
-        .attr("href");
-
-      // Create a new Article using the `result` object built from scraping
-      db.Article.create(result)
-        .then(function(dbArticle) {
-          // View the added result in the console
-          console.log(dbArticle);
-        })
-        .catch(function(err) {
-          // If an error occurred, log it
-          console.log(err);
-        });
-    });
-
-    // Send a message to the client
-    res.send("Scrape Complete");
   });
+
+
+  // Log the results once you've looped through each of the elements found with cheerio
 });
-
-// Route for getting all Articles from the db
-app.get("/articles", function(req, res) {
-  // TODO: Finish the route so it grabs all of the articles
-  db.Article.find({})
-  .then(function(response){
-    res.json(response)
-  })
-});
-
-// Route for grabbing a specific Article by id, populate it with it's note
-app.get("/articles/:id", function(req, res) {
-  // TODO
-  // ====
-  // Finish the route so it finds one article using the req.params.id,
-  db.Article.findOne({_id:req.params.id}).populate('note')
-  // and run the populate method with "note",
-  // then responds with the article with the note included
-  .then(function(response){
-    res.json(response)
-  })
-});
-
-// Route for saving/updating an Article's associated Note
-app.post("/articles/:id", function(req, res) {
-  // TODO
-  // ====
-  // save the new note that gets posted to the Notes collection
-  db.Note.create(req.body)
-  .then(function(response){
-   return db.Article.findOneAndUpdate({_id:req.params.id},{note:response._id})
-  }).then(function(response2){
-    res.json(response2)
-  }).catch(function(err){
-    if(err) throw err
-  })
-  // then find an article from the req.params.id
-
-  // and update it's "note" property with the _id of the new note
-});
-
-// Start the server
 app.listen(PORT, function() {
   console.log("App running on port " + PORT + "!");
 });
