@@ -18,7 +18,7 @@ var scrapeSchema = new Schema({
     type: String
   },
   note: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.String,
     ref: "notes"
   }
   });

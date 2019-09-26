@@ -26,7 +26,7 @@ app.use(express.static("public"));
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
 // Connect to the Mongo DB
-mongoose.connect("mongodb://localhost/cruises", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost/cruises", { useNewUrlParser: true});
 //  get to query the DB for cruise info
 app.get('/', function (req, res) {
   ScrapeData.cruises.find({})
@@ -34,20 +34,31 @@ app.get('/', function (req, res) {
     res.render('index',{info:data});
   });
 });
-
+app.get('/info/:id',(req,res)=>{
+  ScrapeData.cruises.findOne({_id:req.params.id}).populate('note')
+  .then((response)=>{
+    res.json(response);
+  })
+})
 // post to post a note
 app.post('/info/:id',function(req,res){
   console.log(req.body)
   console.log(req.params.id)
-  // ScrapeData.notes.create(req.body)
-  // .then(function(response){
-  //   console.log(response)
-  // //  return ScrapeData.cruises.findOneAndUpdate({_id:req.params.id},{note:response._id})
-  // }).then(function(jsonRes){
-  //   res.json(jsonRes)
-  // }).catch(function(err){
-  //   if(err) throw err
-  // })
+  const noteVal = req.body;
+  const IDP = req.params.id;
+  
+    ScrapeData.notes.create(noteVal)
+    .then(function(response1){
+      console.log(response1)
+     return ScrapeData.cruises.findOneAndUpdate({_id:IDP},{note:response1.body})
+    }).then(function(jsonRes){
+      res.json(jsonRes)
+    }).catch(function(err){
+      if(err) throw err
+    })
+  
+  
+  
 })
 
 
