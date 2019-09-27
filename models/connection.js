@@ -14,6 +14,9 @@ var scrapeSchema = new Schema({
     type: String,
     unique: true
   },
+  price:{
+    type: String
+  },
   link:{
     type: String
   },

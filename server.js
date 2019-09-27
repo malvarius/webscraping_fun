@@ -70,7 +70,8 @@ app.get('/scraping',(req,res)=>{
     var info = {
     title : $(element).find(".cruise-name").text(),
     summary : $(element).find(".depart-date").text(),
-    link : $(element).find(".price-amount").text()
+    price : $(element).find(".price-amount").text(),
+    link : 'https://www.princess.com/find/'+ $(element).find('.invert-decoration').attr('href')
     }
 
     ScrapeData.cruises.create(info)
